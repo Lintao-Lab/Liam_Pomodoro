@@ -1,0 +1,52 @@
+{
+  "name": "liam-pomodoro",
+  "productName": "Liam Pomodoro",
+  "version": "0.1.0",
+  "description": "A single-file Pomodoro timer with an ivory-and-black editorial look.",
+  "main": "electron/main.js",
+  "author": "Lintao Li",
+  "license": "MIT",
+  "private": true,
+  "scripts": {
+    "start": "electron .",
+    "dist:mac": "bash scripts/build-macos.sh",
+    "dist:dir": "electron-builder --mac --dir"
+  },
+  "devDependencies": {
+    "electron": "^45.0.0",
+    "electron-builder": "^26.15.3"
+  },
+  "build": {
+    "appId": "com.lintaolab.liampomodoro",
+    "productName": "Liam Pomodoro",
+    "artifactName": "Liam-Pomodoro-${version}-${arch}.${ext}",
+    "directories": {
+      "output": "dist",
+      "buildResources": "build"
+    },
+    "files": [
+      "index.html",
+      "electron/**/*",
+      "package.json"
+    ],
+    "mac": {
+      "category": "public.app-category.productivity",
+      "target": [
+        {
+          "target": "dmg",
+          "arch": [
+            "universal"
+          ]
+        }
+      ],
+      "icon": "build/icon.png",
+      "darkModeSupport": false,
+      "identity": null,
+      "hardenedRuntime": false,
+      "gatekeeperAssess": false
+    },
+    "dmg": {
+      "title": "Liam Pomodoro ${version}"
+    }
+  }
+}
