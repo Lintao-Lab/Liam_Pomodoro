@@ -1,0 +1,19 @@
+#!/bin/bash
+# pomodoro — control the Pomodoro timer tab (Safari or Chrome) from the terminal.
+# Usage: pomodoro [toggle|start|pause|skip|reset|status]   (default: toggle)
+set -u
+action="${1:-toggle}"
+case "$action" in
+  toggle|start|pause|skip|reset|status) ;;
+  -h|--help|help)
+    echo "usage: pomodoro [toggle|start|pause|skip|reset|status]"
+    exit 0
+    ;;
+  *)
+    echo "pomodoro: unknown action '$action'" >&2
+    echo "usage: pomodoro [toggle|start|pause|skip|reset|status]" >&2
+    exit 2
+    ;;
+esac
+DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+exec osascript "$DIR/bridge.applescript" "$action"
