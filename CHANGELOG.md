@@ -1,5 +1,11 @@
 # Changelog
 
+## Unreleased
+
+- Browser launchers take a free local port on first run and remember it, instead of assuming `8788` is free. A different port would also look like a new install to the browser, so the remembered port keeps settings and records intact.
+- The launcher's server serves `index.html` only; the rest of the repository is no longer readable over HTTP.
+- Terminal bridge finds the Pomodoro tab on any local port, not only `8788`.
+
 ## 0.1.0 — 2026-10-23
 
 First public release.

@@ -1,17 +1,29 @@
 -- Pomodoro terminal bridge — called by the `pomodoro` shell command.
 -- Usage: osascript bridge.applescript [toggle|start|pause|skip|reset|status]
--- Finds the Pomodoro tab in Safari or Chrome and calls the page's window.pomodoro API.
+-- Finds the Pomodoro page in Safari or Chrome and calls its window.pomodoro API.
+-- The launcher picks the port, so match on the host rather than on a fixed port.
+on isPomodoroUrl(u)
+	if u contains "127.0.0.1:" then return true
+	if u contains "localhost:" then return true
+	if u starts with "file:" then return true
+	return false
+end isPomodoroUrl
+
 on run argv
 	set action to item 1 of argv
 
+	-- A page with no API is only "stale" if it really is a Pomodoro page;
+	-- return "" for any other local page so it does not mask a real result.
+	set stale to "(document.title.indexOf('Pomodoro') >= 0 ? 'STALE' : '')"
+
 	if action is "status" then
-		set js to "window.pomodoro ? window.pomodoro.status() : 'STALE'"
+		set js to "window.pomodoro ? window.pomodoro.status() : " & stale
 	else if action is "toggle" or action is "skip" or action is "reset" then
-		set js to "window.pomodoro ? (window.pomodoro." & action & "(), window.pomodoro.status()) : 'STALE'"
+		set js to "window.pomodoro ? (window.pomodoro." & action & "(), window.pomodoro.status()) : " & stale
 	else if action is "start" then
-		set js to "window.pomodoro ? (window.pomodoro.state().running || window.pomodoro.toggle(), window.pomodoro.status()) : 'STALE'"
+		set js to "window.pomodoro ? (window.pomodoro.state().running || window.pomodoro.toggle(), window.pomodoro.status()) : " & stale
 	else if action is "pause" then
-		set js to "window.pomodoro ? (window.pomodoro.state().running && window.pomodoro.toggle(), window.pomodoro.status()) : 'STALE'"
+		set js to "window.pomodoro ? (window.pomodoro.state().running && window.pomodoro.toggle(), window.pomodoro.status()) : " & stale
 	else
 		return "UNKNOWN ACTION"
 	end if
@@ -26,11 +38,11 @@ on run argv
 					repeat with w in windows
 						repeat with t in tabs of w
 							try
-								if (URL of t contains "127.0.0.1:8788") or (name of t contains "— Pomodoro") then
-									set foundTab to true
+								if my isPomodoroUrl(URL of t as text) then
+									if (name of t) contains "Pomodoro" then set foundTab to true
 									try
 										set r to do JavaScript js in t
-										if r is not missing value then set resultText to r as text
+										if r is not missing value and r is not "" then set resultText to r as text
 									end try
 								end if
 							end try
@@ -48,11 +60,11 @@ on run argv
 					repeat with w in windows
 						repeat with t in tabs of w
 							try
-								if (URL of t contains "127.0.0.1:8788") or (title of t contains "— Pomodoro") then
-									set foundTab to true
+								if my isPomodoroUrl(URL of t as text) then
+									if (title of t) contains "Pomodoro" then set foundTab to true
 									try
 										set r to execute javascript js in t
-										if r is not missing value then set resultText to r as text
+										if r is not missing value and r is not "" then set resultText to r as text
 									end try
 								end if
 							end try

@@ -34,7 +34,9 @@ The build is ad-hoc signed but not notarised. On first launch, right-click **Lia
 - **Browser, Windows** — double-click `launchers/windows.vbs`.
 - **Any browser** — open `index.html`.
 
-The browser launchers start a tiny local server at <http://127.0.0.1:8788/> and open it. Opening `index.html` directly works for everything except system notifications: browsers refuse notification permission on `file://` pages.
+The browser launchers start a tiny local server and open it. It takes a free port on `127.0.0.1` the first time you run it and remembers that port afterwards, so a port already in use on your machine cannot break the launcher, and your settings and records stay put. Opening `index.html` directly works for everything except system notifications: browsers refuse notification permission on `file://` pages.
+
+Both launchers need Python 3: `xcode-select --install` on macOS, [python.org](https://www.python.org/downloads/) on Windows.
 
 ## Browser launchers
 
@@ -44,7 +46,7 @@ The macOS app has its own installer. The browser version has none; to put a laun
 
 Agent notes:
 
-- **macOS** — write a small executable `.command` file at the requested location that `exec`s the repo's `launchers/macos.command`, and keep the executable bit. Do not copy `index.html`; the launcher resolves the app relative to the repository.
+- **macOS** — write a small executable `.command` file at the requested location that `exec`s the repo's `launchers/macos.command`, and keep the executable bit. Do not copy `index.html` or `launchers/serve.py`; the launcher resolves them relative to the repository.
 - **Windows** — create a shortcut at the requested location whose target is `wscript.exe "<repo>\launchers\windows.vbs"`.
 
 ## Terminal control (macOS, browser version)

@@ -1,18 +1,16 @@
 #!/bin/bash
-# Liam Pomodoro launcher — double-click to start the local server (if needed) and open the app.
-# Serving over http://127.0.0.1 (instead of file://) is what allows browser
-# notification permission to be granted; file:// pages cannot receive it.
+# Liam Pomodoro launcher — double-click to open the browser version.
+# serve.py picks a free port on first run and remembers it, then opens the page.
 DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-ROOT="$(cd "$DIR/.." && pwd)"
-URL="http://127.0.0.1:8788/"
 
-if ! curl -s --max-time 1 -o /dev/null "$URL"; then
-  cd "$ROOT" || exit 1
-  nohup python3 -m http.server 8788 --bind 127.0.0.1 >/dev/null 2>&1 &
-  for i in $(seq 1 25); do
-    curl -s --max-time 1 -o /dev/null "$URL" && break
-    sleep 0.2
-  done
+if command -v python3 >/dev/null 2>&1; then
+  PYTHON=python3
+elif command -v python >/dev/null 2>&1; then
+  PYTHON=python
+else
+  echo "Liam Pomodoro needs Python 3. Run: xcode-select --install" >&2
+  osascript -e 'display alert "Python 3 is required" message "Install the Xcode Command Line Tools with: xcode-select --install"' >/dev/null 2>&1
+  exit 1
 fi
 
-open "$URL"
+nohup "$PYTHON" "$DIR/serve.py" "$@" >"${TMPDIR:-/tmp}/liam-pomodoro-serve.log" 2>&1 &

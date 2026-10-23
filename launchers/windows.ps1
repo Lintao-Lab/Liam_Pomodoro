@@ -1,34 +1,37 @@
 # Liam Pomodoro launcher (Windows)
-# Starts the tiny local server on 127.0.0.1:8788 if it is not already running,
+# Runs serve.py, which picks a free port on first run and remembers it,
 # then opens the app in the default browser.
 # Serving over http://127.0.0.1 (instead of file://) is what allows browser
 # notification permission to be granted; file:// pages cannot receive it.
 $ScriptDir = Split-Path -Parent $MyInvocation.MyCommand.Path
-$Dir = Split-Path -Parent $ScriptDir
-$Url = 'http://127.0.0.1:8788/'
+$Serve = Join-Path $ScriptDir 'serve.py'
 
-function Test-PomodoroServer {
-    try {
-        $Client = New-Object System.Net.Sockets.TcpClient
-        $Connected = $Client.ConnectAsync('127.0.0.1', 8788).Wait(500)
-        $Client.Close()
-        return $Connected
-    } catch {
-        return $false
+function Find-Python {
+    foreach ($Name in @('python', 'py')) {
+        $Command = Get-Command $Name -ErrorAction SilentlyContinue
+        if (-not $Command) { continue }
+        # The Microsoft Store placeholder under WindowsApps is not a real install.
+        if ($Command.Source -like '*\WindowsApps\*') { continue }
+        return $Command
     }
+    return $null
 }
 
-if (-not (Test-PomodoroServer)) {
-    $Python = Get-Command python -ErrorAction SilentlyContinue
-    if (-not $Python) { $Python = Get-Command py -ErrorAction SilentlyContinue }
-    if (-not $Python) { throw 'Python not found on PATH (need python or py).' }
-    $Args = @('-m', 'http.server', '8788', '--bind', '127.0.0.1')
-    if ($Python.Name -eq 'py') { $Args = @('-3') + $Args }
-    Start-Process -FilePath $Python.Source -ArgumentList $Args -WorkingDirectory $Dir -WindowStyle Hidden
-    foreach ($i in 1..25) {
-        Start-Sleep -Milliseconds 200
-        if (Test-PomodoroServer) { break }
-    }
+$Python = Find-Python
+if (-not $Python) {
+    Add-Type -AssemblyName PresentationFramework
+    [System.Windows.MessageBox]::Show(
+        'Liam Pomodoro needs Python 3. Install it from https://www.python.org/downloads/ and run this launcher again.',
+        'Liam Pomodoro') | Out-Null
+    exit 1
 }
 
-Start-Process $Url
+$Leaf = [System.IO.Path]::GetFileNameWithoutExtension($Python.Source)
+$WindowlessName = if ($Leaf -eq 'py') { 'pyw.exe' } else { 'pythonw.exe' }
+$Exe = Join-Path (Split-Path -Parent $Python.Source) $WindowlessName
+if (-not (Test-Path $Exe)) { $Exe = $Python.Source }
+
+$PythonArgs = @($Serve)
+if ($Leaf -eq 'py') { $PythonArgs = @('-3') + $PythonArgs }
+
+Start-Process -FilePath $Exe -ArgumentList $PythonArgs -WindowStyle Hidden
